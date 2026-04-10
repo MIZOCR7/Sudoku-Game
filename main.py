@@ -46,58 +46,103 @@ class SudokuGame:
         
         return False
     
+    def _find_empty(self, board):
+        for i in range(9):
+            for j in range(9):
+                if board[i][j] == 0:
+                    return (i,j)
+                
+        return None
     
+    def _is_valid(self,board, num, pos):
+        row, col = pos
+        for j in range(9):
+            if board[row][j] == num and j != col:
+                return False
+            
+        for i in range(9):
+            if board[i][col] == num and i != row:
+                return False
+            
+        box_row, box_col = 3 * (row // 3), 3 * (col // 3)
+        for i in range(box_row, box_row + 3):
+            for j in range(box_col, box_col + 3):
+                if board[i][j] == num and (i,j) != pos:
+                    return False
+                
+        return True
+    
+    def _remove_cells(self, count):
+        removed = 0
+        attempts = 0
 
-board = [
-    [0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0],   
-]
+        while removed < count and attempts < count * 3:
+            row = random.randint(0,8)
+            col = random.randint(0,8)
 
-for row in range(len(board)):
-    if row % 3 == 0:
-        print("-" * 25)
+            if self.board[row][col] != 0:
+                backup = self.board[row][col]
+                self.board[row][col] = 0
 
-    for column in range(len(board[0])):
-        if column % 3 == 0:
-            print("|", end=" ")
-
-        print(board[row][column], end=" ")
-
-    print("|")  
-
-print("-" * 25)
+                temp = copy.deepcopy(self.board)
+                if self._count_solutions(temp) == 1:
+                    removed +=1
+                else:
+                    self.board[row][col] = backup
+            attemps += 1
 
 
-def find_position(board):
-    for row in range(len(board)):
-        for column in range(len(board[0])):
-            if board[row][column] == 0:
-                position = (row,column)
-                return position
-    return None
-
-def valid(board, number, pos):
-    row, col = pos
-    for i in range(9):
-        if board[row][i] == number and col != i:
-            return False
-    for j in range(9):
-        if board[j][col] == number and row != j:
-            return False
+    def _count_solutions(self, board, limit=2):
+        count = [0]
+        self._count_helper(board, count, limit)
+        return count [0]
+    
+    def _count_helper(self, board, count ,limit):
+        if count[0] > limit:
+            return
+    
+        empty = self._find_empty(board)
+        if not empty:
+            count[0] += 1
+            return
         
-    box_x = col // 3
-    box_y = row // 3
+        row, col = empty
+        for num in range(1,10):
+            if self.is_valid(board, num, (row,col)):
+                board[row][col] = num
+                self._count_helper(board, count,limit)
+                board[row][col] = 0
 
-    for i in range(box_y * 3, box_y * 3 + 3):
-        for j in range(box_x * 3, box_x * 3 + 3):
-            if board[i][j] == number and (i, j) != pos:
+
+        def is_valid_move(self, row, col, num):
+            if self.original[row][col]!= 0:
                 return False
 
-    return True
+            backup = self.board[row][col]
+            self.board[row][col] = 0
+            valid = self._is_valid(self.board,num, (row,col))
+            self.board[row][col] = backup
+
+            return valid
+        
+        def make_move(self, row, col, num):
+            if self.original[row][col] == 0:
+                self.board[row][col] = num
+            return True
+            
+        def is_complete(self):
+            for i in range(9):
+                for j in range(9):
+                    if self.board[i][j] == 0:
+                        return False
+            return True
+        
+        def get_hint(self):
+            for i in range(9):
+                for j in range(9):
+                    if self.board[i][j] == 0:
+                        return(i,j,self.solution[i][j])
+                    
+            return None
+        
+        
